@@ -4,11 +4,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <assert.h>
 
 #include "types.h"
 #include "Dictionary.h"
-// note deleted some headers here
 
+// creates a new trie node
 TrieNode_t * createNewTrieNode(char8_t c)
 {
 	TrieNode_t* node = (TrieNode_t*)malloc(sizeof(TrieNode_t));
@@ -42,9 +43,21 @@ TrieNode_t * createNewTrieNode(char8_t c)
 	node->ptrToY = nullptr;
 	node->ptrToZ = nullptr;
 
+	node->endOfWord = false;
+	node->isFound = false;
+
 	return node;
 }
 
+// returns a pointer to the node corresponding the wanted character
+TrieNode_t * getTrieNodeByChar(TrieNode_t* charNode, char8_t c)
+{
+	TrieNode_t** charNodePointer = &(charNode->ptrToA) + (c - FIRST_ASCII_CHAR);
+
+	return *charNodePointer;
+}
+
+// creates a new head node for a trie
 TrieList_t* createNewTrieList(char8_t c)
 {
 	TrieList_t* list = (TrieList_t*)malloc(sizeof(TrieList_t));
@@ -53,9 +66,9 @@ TrieList_t* createNewTrieList(char8_t c)
 	list->nextList = nullptr;
 
 	return list;
-
 }
 
+// adds a new head node to the tries list
 void pushNewTrieList(TrieList_t ** head, char8_t c)
 {
 	if (*head == nullptr)
@@ -75,6 +88,26 @@ void pushNewTrieList(TrieList_t ** head, char8_t c)
 	}
 }
 
+// gets the pointer to the head node in the trie list corresponding to the wanted character
+TrieList_t * getTrieListByChar(TrieList_t * head, char8_t c)
+{
+	TrieList_t* currentList = head;
+	while (currentList != nullptr)
+	{
+		if (currentList->characterNode->character == c)
+		{
+			break;
+		}
+
+		currentList = currentList->nextList;
+	}
+
+	assert(currentList != nullptr);
+
+	return currentList;
+}
+
+// create an initial empty tries list
 TrieList_t* createInitialTrie()
 {
 	TrieList_t* head = nullptr;
@@ -87,7 +120,7 @@ TrieList_t* createInitialTrie()
 	return head;
 }
 
-
+// reads a file and builds tries from it that represent the dictionary
 TrieList_t* parseDictionaryFile(char8_t *filename, int32_t *numWords)
 {
 	TrieList_t* trieList = createInitialTrie();
@@ -103,9 +136,9 @@ TrieList_t* parseDictionaryFile(char8_t *filename, int32_t *numWords)
 			continue;
 		}
 
-		*numWords++;
+		(*numWords)++;
 
-		// todo process the string and add it to the trie
+		// processes the string and adds it to the trie
 		AddStringToTrie(trieList, currentString);
 
 		if (feof(dictionaryFile))
@@ -119,12 +152,13 @@ TrieList_t* parseDictionaryFile(char8_t *filename, int32_t *numWords)
 	return trieList;
 }
 
+// checks if a string is valid to be added to the tries
 bool validString(char8_t* str)
 {
 	bool valid = true;
 	int32_t length = strlen(str);
 
-	if (length < 4)
+	if (length < MIN_ACCEPTABLE_WORD_LENGTH)
 	{
 		valid = false;
 	}
@@ -143,6 +177,7 @@ bool validString(char8_t* str)
 	return valid;
 }
 
+// adds a string to a trie
 void AddStringToTrie(TrieList_t* trieList, char8_t* str)
 {
 	// get to the needed node in the trie list
@@ -155,15 +190,10 @@ void AddStringToTrie(TrieList_t* trieList, char8_t* str)
 		{
 			break;
 		}
-
 		currentList = currentList->nextList;
 	}
-#if DEBUG
-	if (currentList == nullptr)
-	{
-		printf("Reached end of list, something is wrong");
-	}
-#endif // DEBUG
+
+	assert(currentList != nullptr);
 
 	TrieNode_t* currentNode = currentList->characterNode;
 
@@ -171,18 +201,21 @@ void AddStringToTrie(TrieList_t* trieList, char8_t* str)
 	for (uchar8_t i = 1; i < length; i++)
 	{
 		c = toupper(str[i]);
-		TrieNode_t** charNodePointer = &(currentNode->ptrToA) + (c - FIRST_ASCII_CHAR) /** sizeof(TrieNode_t*)*/;
+
+		TrieNode_t** charNodePointer = &(currentNode->ptrToA) + (c - FIRST_ASCII_CHAR) ;
 		if (*charNodePointer == nullptr)
 		{
 			*charNodePointer = createNewTrieNode(c);
 		}
+
+		// if it's the last character
+		if (i == length - 1)
+		{
+			(*charNodePointer)->endOfWord = true;
+		}
+
 		currentNode = *(charNodePointer);
 	}
-
-#if DEBUG
-	//currentNode = currentList->characterNode;
-
-#endif // DEBUG
 }
 
 

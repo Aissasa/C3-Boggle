@@ -9,9 +9,7 @@
 #include "types.h"
 #include "Boggle.h"
 #include "Dictionary.h"
-//#include "dice.h"
 #include "game.h"
-
 
 
 int32_t main(int32_t argc, char8_t *argv[])
@@ -24,6 +22,7 @@ int32_t main(int32_t argc, char8_t *argv[])
 #if !INPUT_NEEDED_TO_CONTINUE
 	float_t timeToAverage[NUM_GAMES_TO_AVERAGE];
 #endif
+
 	// get the high resolution counter's accuracy
 	QueryPerformanceFrequency(&ticksPerSecond);
 
@@ -49,7 +48,7 @@ int32_t main(int32_t argc, char8_t *argv[])
 		printBoard(board);
 #endif
 		QueryPerformanceCounter(&startTime);
-		searchForWords();
+		searchForWords(board, trie);
 		QueryPerformanceCounter(&endTime);
 		elapsedTime.QuadPart = endTime.QuadPart - startTime.QuadPart;
 		float_t timeInMilliseconds = 1000.0f* ((float_t)elapsedTime.QuadPart / (float_t)ticksPerSecond.QuadPart);
@@ -60,13 +59,13 @@ int32_t main(int32_t argc, char8_t *argv[])
 #endif
 
 #if INPUT_NEEDED_TO_CONTINUE
-		printf("Press q to quit, any other key to continue:");
+		printf("\nPress q to quit, any other key to continue:\n");
 		scanf("%c", &inChar);
 		fflush(stdin);
 		if (inChar == 'q')
 			done = true;
 		if (!done)
-			resetGame(board);
+			resetGame();
 #else 
 		if (gameCounter < NUM_GAMES_TO_AVERAGE)
 		{

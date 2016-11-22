@@ -1,10 +1,9 @@
 #pragma once
 
-#define DEBUG 1
-
 #define MAX_CHARS_IN_DICTIONARY_WORD 32
 #define MAX_LINE MAX_CHARS_IN_DICTIONARY_WORD
 #define FIRST_ASCII_CHAR 65
+#define MIN_ACCEPTABLE_WORD_LENGTH 4
 
 typedef struct TrieNode
 {
@@ -38,9 +37,12 @@ typedef struct TrieNode
 
 	char8_t character;
 
+	bool endOfWord;
+	bool isFound;
+
 }TrieNode_t;
 
-
+// list for the head nodes of the tries
 typedef struct TrieList
 {
 	TrieNode_t* characterNode;
@@ -50,9 +52,12 @@ typedef struct TrieList
 
 
 TrieNode_t * createNewTrieNode(char8_t c);
+TrieNode_t * getTrieNodeByChar(TrieNode_t* charNode, char8_t c);
 
 TrieList_t* createNewTrieList(char8_t c);
-void pushNewTrieList(TrieList_t * head, char8_t c);
+void pushNewTrieList(TrieList_t ** head, char8_t c);
+TrieList_t* getTrieListByChar(TrieList_t* head, char8_t c);
+
 TrieList_t* createInitialTrie();
 
 TrieList_t* parseDictionaryFile(char8_t *filename, int32_t *numWords);
